@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fdingiit/mpl/pkg/protocol/demo/codec"
+	"github.com/fdingiit/mpl/pkg/plugin/demo/codec"
 	"github.com/stretchr/testify/assert"
 	v2 "mosn.io/mosn/pkg/config/v2"
 )

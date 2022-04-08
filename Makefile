@@ -15,4 +15,4 @@ lab0-task-c:
 	cd ./test && GO111MODULE=on go test -v -run TaskC
 
 lab0-make-plugin:
-	cd ./pkg/protocol/demo && bash make_codec.sh
+	cd ./pkg/plugin/demo && bash make_codec.sh

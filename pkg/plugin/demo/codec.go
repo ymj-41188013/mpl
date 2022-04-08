@@ -1,9 +1,9 @@
-package main
+package demo
 
 import (
 	"context"
 
-	"github.com/fdingiit/mpl/pkg/protocol/demo/codec"
+	"github.com/fdingiit/mpl/pkg/plugin/demo/codec"
 	"mosn.io/api"
 )
 
