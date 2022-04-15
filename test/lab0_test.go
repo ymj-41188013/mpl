@@ -82,6 +82,10 @@ func Test_TaskB(t *testing.T) {
 		t.Errorf("[failed] run server mosn failed")
 		t.FailNow()
 	}
+	if !assert.Nil(t, portCheck(12046, 10)) {
+		t.Errorf("[failed] server mosn failed to start")
+		t.FailNow()
+	}
 	t.Logf("[pass] mosn server stared")
 
 	// start client side mosn
@@ -89,6 +93,10 @@ func Test_TaskB(t *testing.T) {
 	defer clientCmd.Process.Kill()
 	if !assert.NotNil(t, serverCmd) {
 		t.Errorf("[failed] run client mosn failed")
+		t.FailNow()
+	}
+	if !assert.Nil(t, portCheck(12045, 10)) {
+		t.Errorf("[failed] client mosn failed to start")
 		t.FailNow()
 	}
 	t.Logf("[pass] mosn client stared")
