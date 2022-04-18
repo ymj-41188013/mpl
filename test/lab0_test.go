@@ -82,6 +82,10 @@ func Test_TaskB(t *testing.T) {
 		t.Errorf("[failed] run server mosn failed")
 		t.FailNow()
 	}
+	if !assert.Nil(t, portCheck(12046, 10)) {
+		t.Errorf("[failed] server mosn failed to start")
+		t.FailNow()
+	}
 	t.Logf("[pass] mosn server stared")
 
 	// start client side mosn
@@ -89,6 +93,10 @@ func Test_TaskB(t *testing.T) {
 	defer clientCmd.Process.Kill()
 	if !assert.NotNil(t, serverCmd) {
 		t.Errorf("[failed] run client mosn failed")
+		t.FailNow()
+	}
+	if !assert.Nil(t, portCheck(12045, 10)) {
+		t.Errorf("[failed] client mosn failed to start")
 		t.FailNow()
 	}
 	t.Logf("[pass] mosn client stared")
@@ -142,12 +150,21 @@ func Test_TaskC(t *testing.T) {
 
 	// start demo server
 	go serveDemo()
+	if !assert.Nil(t, portCheck(8086, 10)) {
+		t.Errorf("[failed] server demo failed to start")
+		t.FailNow()
+	}
+	t.Logf("[pass] demo server started, will check")
 
 	// start server side mosn
 	serverCmd := startMosn(mosnConfTaskCServer)
 	defer serverCmd.Process.Kill()
 	if !assert.NotNil(t, serverCmd) {
 		t.Errorf("[failed] run server mosn failed")
+		t.FailNow()
+	}
+	if !assert.Nil(t, portCheck(2046, 10)) {
+		t.Errorf("[failed] server mosn failed to start")
 		t.FailNow()
 	}
 	t.Logf("[pass] mosn server stared")
@@ -157,6 +174,10 @@ func Test_TaskC(t *testing.T) {
 	defer clientCmd.Process.Kill()
 	if !assert.NotNil(t, serverCmd) {
 		t.Errorf("[failed] run client mosn failed")
+		t.FailNow()
+	}
+	if !assert.Nil(t, portCheck(2045, 10)) {
+		t.Errorf("[failed] client mosn failed to start")
 		t.FailNow()
 	}
 	t.Logf("[pass] mosn client stared")
@@ -187,10 +208,12 @@ func Test_TaskC(t *testing.T) {
 		t.Errorf("[failed] write failed to 127.0.0.1:2045: %+v", err)
 		t.FailNow()
 	}
+	t.Logf("[pass] message send")
 
 	respBuff := make([]byte, 1024)
 
 	//3.read response
+	conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 	read, err := conn.Read(respBuff)
 	if !assert.Nil(t, err) {
 		t.Errorf("[failed] read failed from 127.0.0.1:2045: %+v", err)
@@ -339,8 +362,27 @@ func serve(c net.Conn) {
 		buf = append(buf, tempBytesThr...)
 		buf = append(buf, bytes...)
 		c.Write(buf)
-		_ = c.Close()
+	} else {
+		fmt.Println(err)
+	}
+}
 
+func portCheck(port int, timeout int) error {
+	timer := time.NewTimer(time.Second * time.Duration(timeout))
+	ticker := time.NewTicker(time.Second)
+
+	for {
+		select {
+		case <-timer.C:
+			return fmt.Errorf("timeout")
+
+		case <-ticker.C:
+			c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+			if err == nil && c != nil {
+				c.Close()
+				return nil
+			}
+		}
 	}
 }
 
@@ -348,7 +390,8 @@ func serveDemo() {
 	//1.create server
 	conn, err := net.Listen("tcp", "127.0.0.1:8086")
 	if err != nil {
-		panic("conn failed")
+		fmt.Println("Listen failed")
+		panic("Listen failed")
 	}
 	for {
 		accept := conn.Accept
@@ -357,6 +400,8 @@ func serveDemo() {
 			fmt.Println("accept closed")
 			continue
 		}
+		fmt.Println("Accepted")
+
 		//let serve do accept
 		go serve(c)
 	}
