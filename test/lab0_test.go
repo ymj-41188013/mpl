@@ -26,7 +26,7 @@ const (
 	mosnExecPath = "../build/mosn/mosnd"
 	mosnVersion  = "v0.26.0"
 
-	pluginCompiler = "../pkg/protocol/demo/make_codec.sh"
+	pluginCompiler = "../pkg/plugin/demo/make_codec.sh"
 
 	mosnConfTaskBServer = "../build/mosn/mosn_config_lab0_taskb_server.json"
 	mosnConfTaskBClient = "../build/mosn/mosn_config_lab0_taskb_client.json"
@@ -37,7 +37,7 @@ const (
 
 var random int
 
-func Test_TaskA(t *testing.T) {
+func Test_Lab0_TaskA(t *testing.T) {
 	cmd := exec.Command("/bin/bash", "-c", mosnExecPath)
 	out, err := cmd.Output()
 	if !assert.Nil(t, err) {
@@ -55,7 +55,7 @@ func Test_TaskA(t *testing.T) {
 	t.Logf("[pass] correct mosn version")
 }
 
-func Test_TaskB(t *testing.T) {
+func Test_Lab0_TaskB(t *testing.T) {
 	_, err := os.Stat(mosnConfTaskBServer)
 	if !assert.Nil(t, err) {
 		t.Errorf("[failed] mosn server conf err: %+v", err)
@@ -131,7 +131,7 @@ func Test_TaskB(t *testing.T) {
 	t.Logf("[pass] correct response")
 }
 
-func Test_TaskC(t *testing.T) {
+func Test_Lab0_TaskC(t *testing.T) {
 	_, err := os.Stat(mosnConfTaskCServer)
 	if !assert.Nil(t, err) {
 		t.Errorf("[failed] mosn server conf err: %+v", err)
