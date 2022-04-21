@@ -1,10 +1,14 @@
 package simple
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Header struct {
@@ -21,8 +25,34 @@ func (h *Header) Encode(ctx context.Context) ([]byte, error) {
 }
 
 func (h *Header) Decode(ctx context.Context, data []byte) error {
-	// todo lab1-task-a
-	panic("implement me")
+	var total = 0
+	var err error
+	totalLen := strings.TrimLeft(string(data[0:8]), "0")
+	if totalLen != "" {
+		total, err = strconv.Atoi(totalLen)
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to decode package len %d, err: %v", total, err))
+		}
+	}
+	var serviceCode = 0
+	serviceCodeLen := strings.TrimLeft(string(data[43:51]), "0")
+	if serviceCodeLen != "" {
+		serviceCode, err = strconv.Atoi(serviceCodeLen)
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to decode package len %d, err: %v", serviceCode, err))
+		}
+	}
+	var pageMarkData int64
+	binary.Read(bytes.NewBuffer(data[10:11]), binary.BigEndian, &pageMarkData)
+	var reservedData int64
+	binary.Read(bytes.NewBuffer(data[51:52]), binary.BigEndian, &reservedData)
+	h.TotalLength = total
+	h.Type = bytes.NewBuffer(data[8:10]).String()
+	h.PageMark = int(pageMarkData)
+	h.Checksum = bytes.NewBuffer(data[11:43]).String()
+	h.ServiceCode = serviceCode
+	h.Reserved = int(reservedData)
+	return nil
 }
 
 type Request struct {

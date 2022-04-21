@@ -196,7 +196,7 @@ func Test_Lab1_TaskC(t *testing.T) {
 
 	// start sdbs server
 	go pkg.Serve()
-	err := portCheck("9999")
+	err := portCheck1("9999")
 	if !assert.Nil(t, err) {
 		t.Errorf("[failed] server failed to start error = %v", err.Error())
 		return
@@ -218,7 +218,7 @@ func Test_Lab1_TaskC(t *testing.T) {
 	stopCmd.Dir = "/Users/dingfei/Go/src/github.com/fdingiit/mpl/pkg/sdbs/gateway/"
 	defer stopCmd.Output()
 
-	err = portCheck("80")
+	err = portCheck1("80")
 	defer startCmd.Process.Signal(os.Kill)
 	if !assert.Nil(t, err) {
 		t.Errorf("[failed] gateway failed to start error = %v", err)
@@ -307,7 +307,7 @@ func Test_Lab1_TaskC(t *testing.T) {
 	}
 }
 
-func portCheck(port string) error {
+func portCheck1(port string) error {
 	fmt.Printf("checking port: %+v\n", port)
 
 	ticker := time.NewTicker(time.Second)
