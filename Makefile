@@ -28,3 +28,15 @@ lab1-task-b:
 
 lab1-task-c:
 	cd ./test && GO111MODULE=on go test -v -run Lab1_TaskC
+
+lab2-task:
+	cd ./test && GO111MODULE=on go test -v -run Lab2
+
+lab2-task-a:
+	cd ./test && GO111MODULE=on go test -v -run Lab2_TaskA
+
+lab2-task-b:
+	cd ./test && GO111MODULE=on go test -v -run Lab2_TaskB
+
+lab2-task-c:
+	cd ./test && GO111MODULE=on go test -v -run Lab2_TaskC
