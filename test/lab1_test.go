@@ -20,6 +20,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var gatewayDir string
+
+func init() {
+	wd, _ := os.Getwd()
+	gatewayDir = wd[:len(wd)-4] + "pkg/sdbs/gateway"
+}
+
 func Test_Lab1_TaskA(t *testing.T) {
 	type args struct {
 		ctx context.Context
@@ -204,18 +211,18 @@ func Test_Lab1_TaskC(t *testing.T) {
 
 	// start gateway
 	startCmd := exec.Command("/bin/bash", "start_gateway.sh")
-	startCmd.Dir = "/Users/dingfei/Go/src/github.com/fdingiit/mpl/pkg/sdbs/gateway/"
+	startCmd.Dir = gatewayDir
 	go func() {
 		output, err := startCmd.Output()
 		if err != nil {
-			fmt.Println(output)
+			fmt.Println(string(output))
 			panic(err)
 		}
 	}()
 
 	// defer stop gateway
 	stopCmd := exec.Command("/bin/bash", "stop_gateway.sh")
-	stopCmd.Dir = "/Users/dingfei/Go/src/github.com/fdingiit/mpl/pkg/sdbs/gateway/"
+	stopCmd.Dir = gatewayDir
 	defer stopCmd.Output()
 
 	err = portCheck("80")
