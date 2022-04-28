@@ -93,7 +93,7 @@ func Test_Lab1_TaskB_Request(t *testing.T) {
 			name: "",
 			request: simple.Request{
 				Header: simple.Header{
-					TotalLength: 322,
+					TotalLength: 328,
 					Type:        "RQ",
 					PageMark:    0,
 					Checksum:    "tPK6UhVeIHb2hrsedxXMJHw         ",
@@ -156,7 +156,7 @@ func Test_Lab1_TaskB_Response(t *testing.T) {
 			name: "",
 			response: simple.Response{
 				Header: simple.Header{
-					TotalLength: 322,
+					TotalLength: 156,
 					Type:        "RS",
 					PageMark:    0,
 					Checksum:    "665db818fa5ef08e9f10ec77d76b9a0e",
@@ -198,6 +198,106 @@ func Test_Lab1_TaskB_Response(t *testing.T) {
 	}
 }
 
+func Test_Lab1_TaskB_Request_Disorder(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		data    []byte
+		args    args
+		want    simple.Request
+		wantErr error
+	}{
+		{
+			name: "",
+			data: []byte("00000328RQ0tPK6UhVeIHb2hrsedxXMJHw         010005010<serial_no>12345</serial_no><timestamp>1648811583</timestamp><currency>2</currency><unit>0</unit><out_bank_id>2</out_bank_id><out_account_id>1234567899321</out_account_id><in_bank_id>2</in_bank_id><amount>100</amount><in_account_id>3211541298661</in_account_id><notes></notes>"),
+			want: simple.Request{
+				Header: simple.Header{
+					TotalLength: 328,
+					Type:        "RQ",
+					PageMark:    0,
+					Checksum:    "tPK6UhVeIHb2hrsedxXMJHw         ",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				Currency:      2,
+				Amount:        100,
+				Unit:          0,
+				OutBankId:     2,
+				OutAccountId:  1234567899321,
+				InBankId:      2,
+				InAccountId:   3211541298661,
+				Notes:         "",
+			},
+			args:    args{ctx: context.TODO()},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := simple.Request{}
+			err := req.Decode(tt.args.ctx, tt.data)
+			if !assert.Equal(t, tt.wantErr, err) {
+				t.Errorf("[failed] Decode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !assert.Equal(t, tt.want, req) {
+				t.Errorf("[failed] Decode() got = %v, want %v", req, tt.want)
+			}
+		})
+	}
+}
+
+func Test_Lab1_TaskB_Response_Disorder(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		data    []byte
+		args    args
+		want    simple.Response
+		wantErr error
+	}{
+		{
+			name: "",
+			data: []byte("00000156RS0665db818fa5ef08e9f10ec77d76b9a0e010005010<serial_no>12345</serial_no><message>ok</message><timestamp>1648811583</timestamp><err_code>0</err_code>"),
+			want: simple.Response{
+				Header: simple.Header{
+					TotalLength: 156,
+					Type:        "RS",
+					PageMark:    0,
+					Checksum:    "665db818fa5ef08e9f10ec77d76b9a0e",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				ErrCode:       0,
+				Message:       "ok",
+			},
+			args:    args{ctx: context.TODO()},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rspp := simple.Response{}
+			err := rspp.Decode(tt.args.ctx, tt.data)
+			if !assert.Equal(t, tt.wantErr, err) {
+				t.Errorf("[failed] Decode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !assert.Equal(t, tt.want, rspp) {
+				t.Errorf("[failed] Decode() got = %v, want %v", rspp, tt.want)
+			}
+		})
+	}
+}
+
 func Test_Lab1_TaskC(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
@@ -210,11 +310,17 @@ func Test_Lab1_TaskC(t *testing.T) {
 	}
 
 	// start gateway
+	stopC := make(chan struct{})
 	startCmd := exec.Command("/bin/bash", "start_gateway.sh")
 	startCmd.Dir = gatewayDir
 	go func() {
 		output, err := startCmd.Output()
 		if err != nil {
+			select {
+			case <-stopC:
+				return
+			default:
+			}
 			fmt.Println(string(output))
 			panic(err)
 		}
@@ -223,7 +329,10 @@ func Test_Lab1_TaskC(t *testing.T) {
 	// defer stop gateway
 	stopCmd := exec.Command("/bin/bash", "stop_gateway.sh")
 	stopCmd.Dir = gatewayDir
-	defer stopCmd.Output()
+	defer func() {
+		close(stopC)
+		stopCmd.Output()
+	}()
 
 	err = portCheck("80")
 	defer startCmd.Process.Signal(os.Kill)
