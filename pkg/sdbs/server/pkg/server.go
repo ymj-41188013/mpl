@@ -32,7 +32,7 @@ func handleTrans(ctx context.Context, req *simple.Request) (*simple.Response, er
 
 func dispatch(ctx context.Context, req *simple.Request) (*simple.Response, error) {
 	switch req.ServiceCode {
-	case 100501:
+	case 1000501:
 		return handleTrans(ctx, req)
 	default:
 		return nil, errors.New("should not be here")
