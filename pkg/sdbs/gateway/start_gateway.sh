@@ -4,7 +4,8 @@ function start_gateway {
   # todo lab1-task-c
   # start the gateway
   echo "implement me!"
-  exit -1
+  go build main.go
+  echo "go build main.go"
 }
 
 start_gateway

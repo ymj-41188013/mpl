@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fdingiit/mpl/pkg/sdbs/server/pkg"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -15,7 +16,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fdingiit/mpl/pkg/sdbs/server/pkg"
 	"github.com/fdingiit/mpl/pkg/simple"
 	"github.com/stretchr/testify/assert"
 )
