@@ -298,6 +298,350 @@ func Test_Lab1_TaskB_Response_Disorder(t *testing.T) {
 	}
 }
 
+func Test_Lab1_TaskB_Request_Decode_LengthCheck(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		data    []byte
+		args    args
+		want    simple.Request
+		wantErr bool
+	}{
+		{
+			name: "more",
+			data: []byte("00000328RQ0tPK6UhVeIHb2hrsedxXMJHw         010005010<serial_no>12345</serial_no><timestamp>1648811583</timestamp><currency>2</currency><unit>0</unit><out_bank_id>2</out_bank_id><out_account_id>1234567899321</out_account_id><in_bank_id>2</in_bank_id><amount>100</amount><in_account_id>3211541298661</in_account_id><notes></notes>abcdfef"),
+			want: simple.Request{
+				Header: simple.Header{
+					TotalLength: 328,
+					Type:        "RQ",
+					PageMark:    0,
+					Checksum:    "tPK6UhVeIHb2hrsedxXMJHw         ",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				Currency:      2,
+				Amount:        100,
+				Unit:          0,
+				OutBankId:     2,
+				OutAccountId:  1234567899321,
+				InBankId:      2,
+				InAccountId:   3211541298661,
+				Notes:         "",
+			},
+			args:    args{ctx: context.TODO()},
+			wantErr: false,
+		},
+		{
+			name: "more xml",
+			data: []byte("00000328RQ0tPK6UhVeIHb2hrsedxXMJHw         010005010<serial_no>12345</serial_no><timestamp>1648811583</timestamp><currency>2</currency><unit>0</unit><out_bank_id>2</out_bank_id><out_account_id>1234567899321</out_account_id><in_bank_id>2</in_bank_id><amount>100</amount><in_account_id>3211541298661</in_account_id><notes></notes><dots></dots>"),
+			want: simple.Request{
+				Header: simple.Header{
+					TotalLength: 328,
+					Type:        "RQ",
+					PageMark:    0,
+					Checksum:    "tPK6UhVeIHb2hrsedxXMJHw         ",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				Currency:      2,
+				Amount:        100,
+				Unit:          0,
+				OutBankId:     2,
+				OutAccountId:  1234567899321,
+				InBankId:      2,
+				InAccountId:   3211541298661,
+				Notes:         "",
+			},
+			args:    args{ctx: context.TODO()},
+			wantErr: false,
+		},
+		{
+			name:    "less data",
+			data:    []byte("00000328RQ0tPK6UhVeIHb2hrsedxXMJHw         010005010<serial_no>12345</serial_no><timestamp>1648811583</timestamp><currency>2</currency><unit>0</unit><out_bank_id>2</out_bank_id><out_account_id>1234567899321</out_account_id><in_bank_id>2</in_bank_id><amount>100</amount><in_account_id>3211541298661</in_accoun"),
+			args:    args{ctx: context.TODO()},
+			wantErr: true,
+		},
+		{
+			name:    "less header",
+			data:    []byte("000003"),
+			args:    args{ctx: context.TODO()},
+			wantErr: true,
+		},
+		{
+			name:    "empty",
+			data:    []byte(""),
+			args:    args{ctx: context.TODO()},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := simple.Request{}
+			err := req.Decode(tt.args.ctx, tt.data)
+			if tt.wantErr {
+				if !assert.NotNil(t, err) {
+					t.Errorf("[failed] excepted Decode() error, but got nil")
+					return
+				}
+				t.Logf("[ok] wanted Decode() error = %v", err)
+			} else {
+				if !assert.Nil(t, err) {
+					t.Errorf("[failed] excepted Decode() error = %v", err)
+					return
+				}
+				if !assert.Equal(t, tt.want, req) {
+					t.Errorf("[failed] Decode() got = %v, want %v", req, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func Test_Lab1_TaskB_Response_Decode_LengthCheck(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		data    []byte
+		args    args
+		want    simple.Response
+		wantErr bool
+	}{
+		{
+			name: "more",
+			data: []byte("00000156RS0665db818fa5ef08e9f10ec77d76b9a0e010005010<serial_no>12345</serial_no><message>ok</message><timestamp>1648811583</timestamp><err_code>0</err_code>abcfdef"),
+			want: simple.Response{
+				Header: simple.Header{
+					TotalLength: 156,
+					Type:        "RS",
+					PageMark:    0,
+					Checksum:    "665db818fa5ef08e9f10ec77d76b9a0e",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				ErrCode:       0,
+				Message:       "ok",
+			},
+			args:    args{ctx: context.TODO()},
+			wantErr: false,
+		},
+		{
+			name: "more xml",
+			data: []byte("00000156RS0665db818fa5ef08e9f10ec77d76b9a0e010005010<serial_no>12345</serial_no><message>ok</message><timestamp>1648811583</timestamp><err_code>0</err_code><dots>0</dots>"),
+			want: simple.Response{
+				Header: simple.Header{
+					TotalLength: 156,
+					Type:        "RS",
+					PageMark:    0,
+					Checksum:    "665db818fa5ef08e9f10ec77d76b9a0e",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				ErrCode:       0,
+				Message:       "ok",
+			},
+			args:    args{ctx: context.TODO()},
+			wantErr: false,
+		},
+		{
+			name:    "less data",
+			data:    []byte("00000156RS0665db818fa5ef08e9f10ec77d76b9a0e010005010<serial_no>12345</serial_no><message>ok</message><timestamp>1648811583</tim"),
+			args:    args{ctx: context.TODO()},
+			wantErr: true,
+		},
+		{
+			name:    "less header",
+			data:    []byte("0000015"),
+			args:    args{ctx: context.TODO()},
+			wantErr: true,
+		},
+		{
+			name:    "empty",
+			data:    []byte(""),
+			args:    args{ctx: context.TODO()},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rsp := simple.Response{}
+			err := rsp.Decode(tt.args.ctx, tt.data)
+			if tt.wantErr {
+				if !assert.NotNil(t, err) {
+					t.Errorf("[failed] excepted Decode() error, but got nil")
+					return
+				}
+				t.Logf("[ok] wanted Decode() error = %v", err)
+			} else {
+				if !assert.Nil(t, err) {
+					t.Errorf("[failed] excepted Decode() error = %v", err)
+					return
+				}
+				if !assert.Equal(t, tt.want, rsp) {
+					t.Errorf("[failed] Decode() got = %v, want %v", rsp, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func Test_Lab1_TaskB_Request_Encode_LengthCheck(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		request simple.Request
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "wrong length in header",
+			request: simple.Request{
+				Header: simple.Header{
+					TotalLength: 300,
+					Type:        "RQ",
+					PageMark:    0,
+					Checksum:    "tPK6UhVeIHb2hrsedxXMJHw         ",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				Currency:      2,
+				Amount:        100,
+				Unit:          0,
+				OutBankId:     2,
+				OutAccountId:  1234567899321,
+				InBankId:      2,
+				InAccountId:   3211541298661,
+				Notes:         "",
+			},
+			args:    args{ctx: context.TODO()},
+			want:    []byte("00000328RQ0tPK6UhVeIHb2hrsedxXMJHw         010005010<timestamp>1648811583</timestamp><serial_no>12345</serial_no><currency>2</currency><amount>100</amount><unit>0</unit><out_bank_id>2</out_bank_id><out_account_id>1234567899321</out_account_id><in_bank_id>2</in_bank_id><in_account_id>3211541298661</in_account_id><notes></notes>"),
+			wantErr: false,
+		},
+		{
+			name: "no length in header",
+			request: simple.Request{
+				Header: simple.Header{
+					Type:        "RQ",
+					PageMark:    0,
+					Checksum:    "tPK6UhVeIHb2hrsedxXMJHw         ",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				Currency:      2,
+				Amount:        100,
+				Unit:          0,
+				OutBankId:     2,
+				OutAccountId:  1234567899321,
+				InBankId:      2,
+				InAccountId:   3211541298661,
+				Notes:         "",
+			},
+			args:    args{ctx: context.TODO()},
+			want:    []byte("00000328RQ0tPK6UhVeIHb2hrsedxXMJHw         010005010<timestamp>1648811583</timestamp><serial_no>12345</serial_no><currency>2</currency><amount>100</amount><unit>0</unit><out_bank_id>2</out_bank_id><out_account_id>1234567899321</out_account_id><in_bank_id>2</in_bank_id><in_account_id>3211541298661</in_account_id><notes></notes>"),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := tt.request
+			enc, err := req.Encode(tt.args.ctx)
+			if !assert.Equal(t, tt.wantErr, err != nil) {
+				t.Errorf("[failed] Encode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !assert.Equal(t, enc, tt.want) {
+				t.Errorf("[failed] Encode() got = %v, want %v", enc, tt.want)
+				return
+			}
+		})
+	}
+}
+
+func Test_Lab1_TaskB_Response_Encode_LengthCheck(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name     string
+		response simple.Response
+		args     args
+		want     []byte
+		wantErr  bool
+	}{
+		{
+			name: "wrong length in header",
+			response: simple.Response{
+				Header: simple.Header{
+					TotalLength: 123,
+					Type:        "RS",
+					PageMark:    0,
+					Checksum:    "665db818fa5ef08e9f10ec77d76b9a0e",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				ErrCode:       0,
+				Message:       "ok",
+			},
+			args:    args{ctx: context.TODO()},
+			want:    []byte("00000156RS0665db818fa5ef08e9f10ec77d76b9a0e010005010<timestamp>1648811583</timestamp><serial_no>12345</serial_no><err_code>0</err_code><message>ok</message>"),
+			wantErr: false,
+		},
+		{
+			name: "no length in header",
+			response: simple.Response{
+				Header: simple.Header{
+					Type:        "RS",
+					PageMark:    0,
+					Checksum:    "665db818fa5ef08e9f10ec77d76b9a0e",
+					ServiceCode: 1000501,
+					Reserved:    0,
+				},
+				UnixTimestamp: 1648811583,
+				SerialNo:      12345,
+				ErrCode:       0,
+				Message:       "ok",
+			},
+			args:    args{ctx: context.TODO()},
+			want:    []byte("00000156RS0665db818fa5ef08e9f10ec77d76b9a0e010005010<timestamp>1648811583</timestamp><serial_no>12345</serial_no><err_code>0</err_code><message>ok</message>"),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rsp := tt.response
+			enc, err := rsp.Encode(tt.args.ctx)
+			if !assert.Equal(t, tt.wantErr, err != nil) {
+				t.Errorf("[failed] Encode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !assert.Equal(t, enc, tt.want) {
+				t.Errorf("[failed] Encode() got = %v, want %v", string(enc), string(tt.want))
+				return
+			}
+		})
+	}
+}
+
 func Test_Lab1_TaskC(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
